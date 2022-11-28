@@ -2,14 +2,21 @@ const route = require('express').Router();
 const verify = require('../verify');
 const crypto = require('crypto-js');
 const jwt = require('jsonwebtoken');
-const User=require('../model/user')
+const User = require('../model/user')
 
 
-//TO get all users
+//TO get all users and single user
 
-route.get('/',async(req,res)=>{
-    const users=await User.find();
-    res.json(users);
+route.get('/', verify, async (req, res) => {
+    if (req.query.userid) {
+        const user = await User.findOne({ _id: req.query.userid });
+        res.json(user);
+
+    } else {
+        const users = await User.find();
+        res.json(users);
+
+    }
 })
 //for user registration
 route.post('/register', async (req, res) => {
@@ -43,4 +50,53 @@ route.post('/login', async (req, res) => {
         console.log(error)
     }
 })
+
+//Update profile
+route.post('/', verify, async (req, res) => {
+    const updateid = req.query.updateid
+    const deleteid = req.query.deleteid
+    if (!req.user.isAdmin || req.user.id===updateid) {
+        if (req.query.updateid) {
+            if (req.body.u_password) {
+                req.body.u_password = crypto.AES.encrypt(req.body.u_password, process.env.SECRET_KEY).toString();
+            }
+            try {
+                const updateUser = await User.findOneAndUpdate({ _id: updateid }, { $set: req.body }, { new: true });
+                if (updateUser) {
+                    res.json({ updateUser })
+                } else {
+                    res.json("Not updated");
+                }
+            } catch (error) {
+                console.log(error)
+            }
+        }
+    } else {
+        if (req.query.updateid) {
+            try {
+                const updateUser = await User.findOneAndUpdate({ _id: updateid }, { $set: req.body }, { new: true });
+                if (updateUser) {
+                    res.json({ updateUser })
+                } else {
+                    res.json("Not updated");
+                }
+            } catch (error) {
+                console.log(error)
+            }
+        } else {
+            try {
+                const updateUser = await User.findByIdAndDelete({ _id: deleteid });
+                if (updateUser) {
+                    res.json({ updateUser })
+                } else {
+                    res.json("Not updated");
+                }
+            } catch (error) {
+                console.log(error)
+            }
+        }
+    }
+})
+
+
 module.exports = route;

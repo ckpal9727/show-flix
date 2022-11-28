@@ -46,15 +46,16 @@ route.get('/', async (req, res) => {
 
 // To upload movie
 
-route.post('/upload_movie', upload.single('m_poster'), async (req, res) => {
+route.post('/upload_movie',verify, upload.single('m_poster'), async (req, res) => {
     const { m_title, m_description, m_background, m_releaseDate, m_rating, m_type, m_link } = req.body;
+   if(req.user.isAdmin){
     try {
         const m_poster = {
             data: req.file.filename,
             contentType: 'image/png'
         }
-        
-        const newMovie = await Movie.create({ m_title, m_description, m_background, m_releaseDate, m_rating, m_type, m_link:m_poster.data });
+
+        const newMovie = await Movie.create({ m_title, m_description, m_background, m_releaseDate, m_rating, m_type, m_link: m_poster.data });
         if (newMovie) {
             res.json({ newMovie: newMovie });
         } else {
@@ -63,34 +64,37 @@ route.post('/upload_movie', upload.single('m_poster'), async (req, res) => {
     } catch (error) {
         console.log(error)
     }
+   }
 })
 
 //Updating and deleting movie by id using query perameter
 
-route.post('/',async(req,res)=>{
-    if(!req.query.deleteid){
-        try {
-            console.log(req.query.updateid)
-            const updateMovie=await Movie.updateOne({_id:req.query.updateid},{$set:req.body},{new:true});
-            if(updateMovie){
-                console.log(req.body);
-                res.json({updateMovie:updateMovie});    
-            }else{
-                res.send("data has not uploded");
+route.post('/', verify, async (req, res) => {
+    if (req.user.isAdmin) {
+        if (!req.query.deleteid) {
+            try {
+                console.log(req.query.updateid)
+                const updateMovie = await Movie.updateOne({ _id: req.query.updateid }, { $set: req.body }, { new: true });
+                if (updateMovie) {
+                    console.log(req.body);
+                    res.json({ updateMovie: updateMovie });
+                } else {
+                    res.send("data has not uploded");
+                }
+            } catch (error) {
+                console.log(error)
             }
-        } catch (error) {
-            console.log(error)
-        }
-    }else{
-        try {
-            const deleteMovie=await Movie.deleteOne({_id:req.query.deleteid});
-            if(deleteMovie){
-                res.json({deleteMovie});
-            }else{
-                res.send("data has not uploded");
+        } else {
+            try {
+                const deleteMovie = await Movie.deleteOne({ _id: req.query.deleteid });
+                if (deleteMovie) {
+                    res.json({ deleteMovie });
+                } else {
+                    res.send("data has not uploded");
+                }
+            } catch (error) {
+                console.log(error)
             }
-        } catch (error) {
-            console.log(error)
         }
     }
 })
