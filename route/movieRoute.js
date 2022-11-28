@@ -53,7 +53,8 @@ route.post('/upload_movie', upload.single('m_poster'), async (req, res) => {
             data: req.file.filename,
             contentType: 'image/png'
         }
-        const newMovie = await Movie.create({ m_title, m_description, m_background, m_releaseDate, m_rating, m_type, m_link, m_poster });
+        
+        const newMovie = await Movie.create({ m_title, m_description, m_background, m_releaseDate, m_rating, m_type, m_link:m_poster.data });
         if (newMovie) {
             res.json({ newMovie: newMovie });
         } else {

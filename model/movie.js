@@ -8,7 +8,7 @@ const Movie=mongoose.Schema({
         type:String
     },
     m_poster:{
-        data: Buffer,
+        data: String,
         contentType: String
     },
     m_background:{
